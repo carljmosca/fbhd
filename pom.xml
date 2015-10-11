@@ -68,7 +68,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        
+ 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>        
+                      
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
@@ -94,6 +99,22 @@
             <groupId>org.vaadin.spring.addons</groupId>
             <artifactId>vaadin-spring-addon-i18n</artifactId>
             <version>0.0.7-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>net.anthavio</groupId>
+            <artifactId>airbrake-logback</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.anthavio</groupId>
+            <artifactId>hatatitla</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
         </dependency>
     </dependencies>
 	
