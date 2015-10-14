@@ -10,7 +10,6 @@ import com.github.fbhd.dto.Ticket;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.spring.access.ViewAccessControl;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.UI;
 
@@ -18,7 +17,7 @@ import com.vaadin.ui.UI;
  *
  * @author moscac
  */
-public class BaseView extends CssLayout implements View { //, ViewAccessControl {
+public class BaseView extends CssLayout implements View {
 
     protected Ticket ticket;
     protected BeanFieldGroup<Ticket> fieldGroup;
@@ -43,10 +42,5 @@ public class BaseView extends CssLayout implements View { //, ViewAccessControl 
     public BeanFieldGroup<Ticket> getFieldGroup() {
         return fieldGroup;
     }
-
-//    @Override
-//    public boolean isAccessGranted(UI ui, String string) {
-//        return true;
-//    }
 
 }

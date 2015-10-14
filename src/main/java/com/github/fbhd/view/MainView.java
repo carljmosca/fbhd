@@ -6,42 +6,55 @@
 package com.github.fbhd.view;
 
 import com.github.fbhd.Sections;
+import com.github.fbhd.ValoSideBarUI;
 import com.github.fbhd.main.BaseView;
-import com.vaadin.navigator.ViewChangeListener;
+import com.github.fbhd.oauth.util.OAuthProvider;
+import com.github.fbhd.oauth.util.OAuthUtil;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.spring.sidebar.annotation.FontAwesomeIcon;
 import org.vaadin.spring.sidebar.annotation.SideBarItem;
 
-@SpringView(name = TicketView.VIEW_NAME)
+/**
+ *
+ * @author moscac
+ */
+@SpringView(name = MainView.VIEW_NAME)
 @SideBarItem(sectionId = Sections.EXECUTION,
-        caption = "Ticket",
+        caption = "",
         order = 20)
-@FontAwesomeIcon(FontAwesome.TICKET)
-public class TicketView extends BaseView {
+@FontAwesomeIcon(FontAwesome.SIGN_IN)
+public class MainView extends BaseView {
 
-    public static final String VIEW_NAME = "ticket";
+    public static final String VIEW_NAME = "";
     private VerticalLayout mainLayout;
     private HorizontalLayout detailLayout;
     private HorizontalLayout buttonLayout;
-    private TextField tfSummary;
-    private TextField tfDetail;
-
-    @Override
-    public void enter(ViewChangeListener.ViewChangeEvent event) {
-    }
-
-    public TicketView() {
-    }
+    @Autowired
+    OAuthUtil oAuthUtil;
+    @Autowired
+    private HttpSession httpSession;
 
     @PostConstruct
     void init() {
+
+//        UI ui = ValoSideBarUI.getCurrent();
+//        if (ui != null) {
+//            VaadinSession session = ui.getSession();
+//            if (session != null) {
+//                error = session.getAttribute(MainView.ERROR_ATTRIBUTE);
+//                email = session.getAttribute(MainView.EMAIL_ATTRIBUTE);
+//            }
+//        }
 
         mainLayout = new VerticalLayout();
         mainLayout.setSizeFull();
@@ -59,9 +72,7 @@ public class TicketView extends BaseView {
 
     private void createDetail() {
         detailLayout = new HorizontalLayout();
-        tfSummary = new TextField();
-        tfSummary.setInputPrompt("Summary");
-        detailLayout.addComponent(tfSummary);
+
         mainLayout.addComponent(detailLayout);
     }
 
@@ -69,11 +80,11 @@ public class TicketView extends BaseView {
         buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        Button btnSubmit = new Button("Submit");
-        btnSubmit.setStyleName(ValoTheme.BUTTON_PRIMARY);
+        Button btnLogin = new Button("Login");
+        btnLogin.setStyleName(ValoTheme.BUTTON_PRIMARY);
 
-        btnSubmit.addClickListener((Button.ClickEvent event) -> {
-            persistAndContinue(ConfirmationView.VIEW_NAME);
+        btnLogin.addClickListener((Button.ClickEvent event) -> {
+            doLogin();
         });
 
         Button btnCancel = new Button("Cancel");
@@ -82,9 +93,15 @@ public class TicketView extends BaseView {
 
         });
 
-        buttonLayout.addComponents(btnSubmit, btnCancel);
+        buttonLayout.addComponents(btnLogin, btnCancel);
         mainLayout.addComponent(buttonLayout);
     }
 
+    private void doLogin() {
 
+        OAuthProvider provider = oAuthUtil.getByName("GOOGLE");
+        String url = provider.getOAuth().getAuthorizationUrl(provider.getScopes(),
+                String.valueOf(System.currentTimeMillis()));
+        getUI().getPage().setLocation(url);
+    }
 }

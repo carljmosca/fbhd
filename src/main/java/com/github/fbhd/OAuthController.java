@@ -15,20 +15,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.websocket.server.PathParam;
+import javax.servlet.http.HttpSession;
 import net.anthavio.httl.HttlResponse;
 import net.anthavio.httl.HttlResponseExtractor;
 import net.anthavio.httl.HttlSender;
 import net.anthavio.httl.auth.OAuthTokenResponse;
 import net.anthavio.httl.util.HttlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -38,14 +36,16 @@ import org.springframework.web.context.request.WebRequest;
 @Controller
 @RequestMapping("/oauth")
 public class OAuthController {
-    
+
     @Autowired
     OAuthUtil oAuthUtil;
+    @Autowired
+    private HttpSession httpSession;
 
     public OAuthController() {
-   
+
     }
-    
+
     @PostConstruct
     private void init() {
     }
@@ -58,41 +58,44 @@ public class OAuthController {
     }
 
     @RequestMapping(value = "/callback/{provider}", method = RequestMethod.GET)
-    public String oauthErrorCallback(@PathParam("provider") String provider,
-            @RequestParam("error") String error,
-            @RequestParam("error_description") String error_description,
-            @RequestParam("code") String code, WebRequest request2,
-            HttpServletRequest request, HttpServletResponse response) {
+    public String oauthErrorCallback(@PathVariable("provider") String provider,
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "error_description", required = false) String error_description,
+            @RequestParam(value = "code") String code,
+            HttpServletRequest request) {
+        httpSession.removeAttribute(ValoSideBarUI.ERROR_ATTRIBUTE);
+        httpSession.removeAttribute(ValoSideBarUI.EMAIL_ATTRIBUTE);
+
         if (error != null) {
-            return getURI("../main?login_error=" + error).toString();
-        }
+            httpSession.setAttribute(ValoSideBarUI.ERROR_ATTRIBUTE, error);
+        } else {
 
-        OAuthProviderType p = OAuthProvider.getByName(provider);
-        OAuthTokenResponse tokenResponse;
+            OAuthProviderType p = OAuthProvider.getByName(provider);
+            OAuthTokenResponse tokenResponse;
 
-        String email;
-        switch (p) {
-            case FACEBOOK:
-                email = facebook(code);
-                break;
-            case GOOGLE:
-                tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
-                email = google(tokenResponse.getAccess_token());
-                break;
-            case GITHUB:
-                tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
-                email = github(tokenResponse.getAccess_token());
-                break;
-            case LINKEDIN:
-                tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
-                email = linkedin(tokenResponse.getAccess_token());
-                break;
-            default:
-                throw new IllegalStateException("Unknown " + p);
+            String email;
+            switch (p) {
+                case FACEBOOK:
+                    email = facebook(code);
+                    break;
+                case GOOGLE:
+                    tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
+                    email = google(tokenResponse.getAccess_token());
+                    break;
+                case GITHUB:
+                    tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
+                    email = github(tokenResponse.getAccess_token());
+                    break;
+                case LINKEDIN:
+                    tokenResponse = oAuthUtil.getByName(provider).getOAuth().access(code).get();
+                    email = linkedin(tokenResponse.getAccess_token());
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown " + p);
+            }
+            httpSession.setAttribute(ValoSideBarUI.EMAIL_ATTRIBUTE, email);
         }
-        request.getSession().setAttribute("EMAIL", email);
-        
-        return getURI("../main").toString();
+        return "redirect:/#!ticket";
     }
 
     private String facebook(String code) {
@@ -126,7 +129,7 @@ public class OAuthController {
                 .header("Authorization", "Bearer " + access_token).extract(Map.class);
         Map map = response.getBody();
         List<LinkedHashMap> emails = (List<LinkedHashMap>) map.get("emails");
-        String email = (String)emails.get(0).get("value");
+        String email = (String) emails.get(0).get("value");
         return email;
         //return (String) map.get("displayName");
     }
@@ -169,7 +172,7 @@ public class OAuthController {
         }
 
     }
-    
+
     private URI getURI(String value) {
         try {
             URI uri = new URI(value);

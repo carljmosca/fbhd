@@ -10,6 +10,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.UI;
+import javax.servlet.http.HttpSession;
 import org.vaadin.spring.sidebar.components.AbstractSideBar;
 import org.vaadin.spring.sidebar.components.ValoSideBar;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,16 @@ public class ValoSideBarUI extends AbstractSideBarUI {
     ValoSideBar sideBar;
     @Autowired
     TicketDao ticketDao;
+    @Autowired
+    private HttpSession httpSession;
+    
+    public static final String ERROR_ATTRIBUTE = "ERROR";
+    public static final String EMAIL_ATTRIBUTE = "EMAIL";
     protected boolean redactionNoticedAcknowledged;
     protected Ticket ticket;
+    private boolean loggedIn;
+    private String email;
+    private String error;
 
     public ValoSideBarUI() {
 
@@ -34,7 +43,14 @@ public class ValoSideBarUI extends AbstractSideBarUI {
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         super.init(vaadinRequest);
+
         CssLayout header = new CssLayout();
+        
+        error = (String)httpSession.getAttribute(ERROR_ATTRIBUTE);
+        email = (String)httpSession.getAttribute(EMAIL_ATTRIBUTE);
+        loggedIn = email != null && !email.isEmpty();
+
+        vaadinRequest.getWrappedSession().getAttribute(DESIGN_ATTR_PLAIN_TEXT);
 
         MenuBar menuBar = new MenuBar();
         header.addComponent(menuBar);
@@ -83,4 +99,17 @@ public class ValoSideBarUI extends AbstractSideBarUI {
     public void persistTicket() {
         ticketDao.save(ticket);
     }
+
+    public boolean isLoggedIn() {
+        return loggedIn;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getError() {
+        return error;
+    }
+
 }
